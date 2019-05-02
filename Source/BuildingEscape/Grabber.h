@@ -6,6 +6,7 @@
 #include "Components/ActorComponent.h"
 #include "PhysicsEngine/PhysicsHandleComponent.h"
 #include "Components/InputComponent.h"
+#include "Components/PrimitiveComponent.h"
 #include "Grabber.generated.h"
 
 
@@ -29,7 +30,8 @@ public:
 private:
 	void Grab();
 	void Release();
-	const AActor* FindGrabActor();
+	UPrimitiveComponent* FindGrabComponent();
+	FVector GetGrabLocation();
 
 private:
 	UPhysicsHandleComponent* PhysicsHandle;

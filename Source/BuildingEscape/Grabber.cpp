@@ -32,37 +32,45 @@ void UGrabber::BeginPlay()
 void UGrabber::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
+
+	PhysicsHandle->SetTargetLocation(GetGrabLocation());
 }
 
 // Grabs shit
 void UGrabber::Grab()
 {
-	UE_LOG(LogTemp, Warning, TEXT("Grab it like Gilles"))
-
-		const AActor* grabActor = FindGrabActor();
-	if (grabActor)
+	UPrimitiveComponent* grabComponent = FindGrabComponent();
+	if (grabComponent)
 	{
-
+		PhysicsHandle->GrabComponent(grabComponent, NAME_None, grabComponent->GetOwner()->GetActorLocation(), true);
 	}
 }
 
 // Releases shit
 void UGrabber::Release()
 {
-	UE_LOG(LogTemp, Warning, TEXT("Drop it like it's hot"))
+	PhysicsHandle->ReleaseComponent();
 }
 
-const AActor* UGrabber::FindGrabActor()
+UPrimitiveComponent* UGrabber::FindGrabComponent()
 {
 	FVector POVlocation;
 	FRotator POVrotation;
 
 	GetWorld()->GetFirstPlayerController()->GetPlayerViewPoint(POVlocation, POVrotation);
-	FVector LineTraceEnd = POVlocation + POVrotation.Vector() * GrabbingRange;
 
 	FHitResult HitResult;
-	GetWorld()->LineTraceSingleByObjectType(HitResult, POVlocation, LineTraceEnd, FCollisionObjectQueryParams(ECollisionChannel::ECC_PhysicsBody));
+	GetWorld()->LineTraceSingleByObjectType(HitResult, POVlocation, GetGrabLocation(), FCollisionObjectQueryParams(ECollisionChannel::ECC_PhysicsBody));
 
-	return HitResult.GetActor();
+	return HitResult.GetComponent();
+}
+
+FVector UGrabber::GetGrabLocation()
+{
+	FVector POVlocation;
+	FRotator POVrotation;
+
+	GetWorld()->GetFirstPlayerController()->GetPlayerViewPoint(POVlocation, POVrotation);
+	return POVlocation + POVrotation.Vector() * GrabbingRange;
 }
 
