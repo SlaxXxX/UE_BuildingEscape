@@ -27,20 +27,21 @@ public:
 
 private:
 	void RotateDoor(const float Angle);
+	float GetTotalMassOfActorsInTrigger();
 
-private:
 	UPROPERTY(EditAnywhere)
 		float OpenAngle = 90.f;
 	UPROPERTY(EditAnywhere)
 		float CloseAngle = 0.f;
 	UPROPERTY(EditAnywhere)
-		ATriggerVolume* PressurePlate;
+		ATriggerVolume* PressurePlate = nullptr;
 	UPROPERTY(EditAnywhere)
 		float DoorCloseTime = 1;
+	UPROPERTY(EditAnywhere)
+		float MinimumMass = 50.f;
 
-private:
+
 	AActor* Owner;
-	AActor* ActorThatOpens;
 	bool IsDoorOpen = false;
 	float TimeDoorCloses;
 };

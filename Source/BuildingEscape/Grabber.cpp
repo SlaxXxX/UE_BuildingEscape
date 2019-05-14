@@ -26,12 +26,20 @@ void UGrabber::BeginPlay()
 		InputComponent->BindAction("Grab", IE_Pressed, this, &UGrabber::Grab);
 		InputComponent->BindAction("Grab", IE_Released, this, &UGrabber::Release);
 	}
+	else
+		UE_LOG(LogTemp, Error, TEXT("%s: NO INPUT COMPONENT"), *GetOwner()->GetName());
+
+	if (!PhysicsHandle)
+		UE_LOG(LogTemp, Error, TEXT("%s: NO PHYSICS HANDLE"), *GetOwner()->GetName());
 }
 
 // Called every frame
 void UGrabber::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
+
+	if (!PhysicsHandle)
+		return;
 
 	PhysicsHandle->SetTargetLocation(GetGrabLocation());
 }
@@ -40,37 +48,51 @@ void UGrabber::TickComponent(float DeltaTime, ELevelTick TickType, FActorCompone
 void UGrabber::Grab()
 {
 	UPrimitiveComponent* grabComponent = FindGrabComponent();
-	if (grabComponent)
-	{
-		PhysicsHandle->GrabComponent(grabComponent, NAME_None, grabComponent->GetOwner()->GetActorLocation(), true);
-	}
+	if (!grabComponent)
+		return;
+
+	PhysicsHandle->GrabComponent(grabComponent, NAME_None, grabComponent->GetOwner()->GetActorLocation(), true);
 }
 
 // Releases shit
 void UGrabber::Release()
 {
+	if (!PhysicsHandle)
+		return;
+
 	PhysicsHandle->ReleaseComponent();
 }
 
 UPrimitiveComponent* UGrabber::FindGrabComponent()
 {
-	FVector POVlocation;
-	FRotator POVrotation;
-
-	GetWorld()->GetFirstPlayerController()->GetPlayerViewPoint(POVlocation, POVrotation);
-
 	FHitResult HitResult;
-	GetWorld()->LineTraceSingleByObjectType(HitResult, POVlocation, GetGrabLocation(), FCollisionObjectQueryParams(ECollisionChannel::ECC_PhysicsBody));
+	GetWorld()->LineTraceSingleByObjectType(HitResult, GetPOVLocation(), GetGrabLocation(), FCollisionObjectQueryParams(ECollisionChannel::ECC_PhysicsBody));
 
 	return HitResult.GetComponent();
 }
 
 FVector UGrabber::GetGrabLocation()
 {
+	return GetPOVLocation() + GetPOVRotation().Vector() * GrabbingRange;
+}
+
+FVector UGrabber::GetPOVLocation()
+{
 	FVector POVlocation;
 	FRotator POVrotation;
 
 	GetWorld()->GetFirstPlayerController()->GetPlayerViewPoint(POVlocation, POVrotation);
-	return POVlocation + POVrotation.Vector() * GrabbingRange;
+
+	return POVlocation;
+}
+
+FRotator UGrabber::GetPOVRotation()
+{
+	FVector POVlocation;
+	FRotator POVrotation;
+
+	GetWorld()->GetFirstPlayerController()->GetPlayerViewPoint(POVlocation, POVrotation);
+
+	return POVrotation;
 }
 

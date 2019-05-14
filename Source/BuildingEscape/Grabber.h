@@ -32,10 +32,12 @@ private:
 	void Release();
 	UPrimitiveComponent* FindGrabComponent();
 	FVector GetGrabLocation();
+	FVector GetPOVLocation();
+	FRotator GetPOVRotation();
 
 private:
-	UPhysicsHandleComponent* PhysicsHandle;
-	UInputComponent* InputComponent;
+	UPhysicsHandleComponent* PhysicsHandle = nullptr;
+	UInputComponent* InputComponent = nullptr;
 
 	UPROPERTY(EditAnywhere)
 		float GrabbingRange = 150.0f;

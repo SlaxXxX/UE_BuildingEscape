@@ -2,6 +2,7 @@
 
 #include "OpenDoor.h"
 #include "Engine/World.h"
+#include "Components/PrimitiveComponent.h"
 #include "GameFramework/PlayerController.h"
 
 // Sets default values for this component's properties
@@ -20,7 +21,9 @@ void UOpenDoor::BeginPlay()
 {
 	Super::BeginPlay();
 
-	ActorThatOpens = GetWorld()->GetFirstPlayerController()->GetPawn();
+	if (!PressurePlate)
+		UE_LOG(LogTemp, Error, TEXT("%s: NO PRESSURE PLATE"), *GetOwner()->GetName());
+
 	Owner = GetOwner();
 }
 
@@ -30,29 +33,43 @@ void UOpenDoor::RotateDoor(const float Angle)
 	Owner->SetActorRotation(NewRotation);
 }
 
+float UOpenDoor::GetTotalMassOfActorsInTrigger()
+{
+	if (!PressurePlate)
+		return 0.;
+
+	float TotalMass = 0.0f;
+	TArray<AActor*> OverlappingActors;
+	PressurePlate->GetOverlappingActors(OverlappingActors);
+
+	for (const AActor* Actor : OverlappingActors)
+		TotalMass += Actor->FindComponentByClass<UPrimitiveComponent>()->GetMass();
+
+	return TotalMass;
+}
+
 
 // Called every frame
 void UOpenDoor::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 
-	if (PressurePlate != nullptr)
-	{
-		if (PressurePlate->IsOverlappingActor(ActorThatOpens))
-		{
-			TimeDoorCloses = GetWorld()->GetRealTimeSeconds() + DoorCloseTime;
-			if (!IsDoorOpen)
-			{
-				RotateDoor(OpenAngle);
-				IsDoorOpen = true;
-			}
-		}
-		else if (IsDoorOpen && GetWorld()->GetRealTimeSeconds() > TimeDoorCloses)
-		{
-			RotateDoor(CloseAngle);
-			IsDoorOpen = false;
-		}
+	if (!PressurePlate)
+		return;
 
+	if (GetTotalMassOfActorsInTrigger() >= MinimumMass)
+	{
+		TimeDoorCloses = GetWorld()->GetRealTimeSeconds() + DoorCloseTime;
+		if (!IsDoorOpen)
+		{
+			RotateDoor(OpenAngle);
+			IsDoorOpen = true;
+		}
+	}
+	else if (IsDoorOpen && GetWorld()->GetRealTimeSeconds() > TimeDoorCloses)
+	{
+		RotateDoor(CloseAngle);
+		IsDoorOpen = false;
 	}
 
 }
