@@ -27,12 +27,6 @@ void UOpenDoor::BeginPlay()
 	Owner = GetOwner();
 }
 
-void UOpenDoor::RotateDoor(const float Angle)
-{
-	FRotator NewRotation = FRotator(0.f, Angle, 0.f);
-	Owner->SetActorRotation(NewRotation);
-}
-
 float UOpenDoor::GetTotalMassOfActorsInTrigger()
 {
 	if (!PressurePlate)
@@ -62,13 +56,13 @@ void UOpenDoor::TickComponent(float DeltaTime, ELevelTick TickType, FActorCompon
 		TimeDoorCloses = GetWorld()->GetRealTimeSeconds() + DoorCloseTime;
 		if (!IsDoorOpen)
 		{
-			RotateDoor(OpenAngle);
+			OnOpenRequest.Broadcast();
 			IsDoorOpen = true;
 		}
 	}
 	else if (IsDoorOpen && GetWorld()->GetRealTimeSeconds() > TimeDoorCloses)
 	{
-		RotateDoor(CloseAngle);
+		OnCloseRequest.Broadcast();
 		IsDoorOpen = false;
 	}
 
